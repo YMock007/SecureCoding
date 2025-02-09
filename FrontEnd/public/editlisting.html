@@ -29,12 +29,15 @@
             type: "GET",///supply the method
             contentType: "application/json",//standard
             dataType: "json",
+            headers: {
+                "Authorization": "Bearer " + token
+        },
             success: function (data, textStatus, xhr) {//retrieve some data back from server
                 if (data.success) {
-                    var title = data.result[0].title;
-                    var category = data.result[0].category;
-                    var description = data.result[0].description;
-                    var price = data.result[0].price;
+                    var title = data.result.result[0].title;
+                    var category = data.result.result[0].category;
+                    var description = data.result.result[0].description;
+                    var price = data.result.result[0].price;
 
                     $('#title').val(title);
                     $('#category').val(category);
@@ -64,6 +67,9 @@
                 type: "PUT",///supply the method
                 data: data,//supply the data to the back-end(like PostMAN body but sending it in raw json format)
                 contentType: "application/json",//standard
+                headers: {
+                    "Authorization": "Bearer " + token
+                },
                 dataType: "json",
                 success: function (data, textStatus, xhr) {//retrieve some data back from server
                     if (data.success) {
@@ -87,6 +93,9 @@
                 type: "DELETE",///supply the method
                 data: data,//supply the data to the back-end(like PostMAN body but sending it in raw json format)
                 contentType: "application/json",//standard
+                headers: {
+                    "Authorization": "Bearer " + token
+                },
                 dataType: "json",
                 success: function (data, textStatus, xhr) {//retrieve some data back from server
                     if (data.success) {

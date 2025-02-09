@@ -36,28 +36,31 @@
 		}
 
 		$.ajax({
-			url: "http://localhost:8081/listing/" + `${listingid}` + "/",//supply the api url
+			url: "http://localhost:8081/listing/" + `${listingid}` + "/",
 			type: "GET",///supply the method
 			contentType: "application/json",//standard
 			dataType: "json",
-			success: function (data, textStatus, xhr) {//retrieve some data back from server
+			headers: {
+        			"Authorization": "Bearer " + token
+    		},
+			success: function (data, textStatus, xhr) {
 				if (data.success) {
 					var postsHtml = "";
-					if (data.result[0].fk_poster_id == userid) {
+					if (data.result.isOwner) {
 						postsHtml += ` <div class="container-fliud">
 				<div class="wrapper row">
 					<div class="preview col-md-6">
 
 						<div class="preview-pic tab-content">
-							<div class="tab-pane active" id="pic-1"><img class="card-img-top" width = 507px height = 450.65px src="http://localhost:8081/${data.result[0].name}" alt="Card image cap"></div>
+							<div class="tab-pane active" id="pic-1"><img class="card-img-top" width = 507px height = 450.65px src="http://localhost:8081/${data.result.result[0].name}" alt="Card image cap"></div>
 						</div>
 					</div>
 					<div class="details col-md-6">
-						<h3 class="product-title">${data.result[0].title}</h3>
-						<h4>Category: ${data.result[0].category}</h4>
-						<p class="product-description">Description: ${data.result[0].description}</p>
-						<p>Posted by: ${data.result[0].username}</p>
-						<h4 class="price">Price: $ <span>${data.result[0].price}</span></h4>
+						<h3 class="product-title">${data.result.result[0].title}</h3>
+						<h4>Category: ${data.result.result[0].category}</h4>
+						<p class="product-description">Description: ${data.result.result[0].description}</p>
+						<p>Posted by: ${data.result.result[0].username}</p>
+						<h4 class="price">Price: $ <span>${data.result.result[0].price}</span></h4>
 						<div class="action">
 								<button class="add-to-cart btn btn-primary" id = "edit" type="button">Edit</button>
 						</div>
@@ -70,15 +73,15 @@
 					<div class="preview col-md-6">
 
 						<div class="preview-pic tab-content">
-							<div class="tab-pane active" id="pic-1"><img class="card-img-top" width = 507px height = 450.65px src="http://localhost:8081/${data.result[0].name}" alt="Card image cap"></div>
+							<div class="tab-pane active" id="pic-1"><img class="card-img-top" width = 507px height = 450.65px src="http://localhost:8081/${data.result.result[0].name}" alt="Card image cap"></div>
 						</div>
 					</div>
 					<div class="details col-md-6">
-						<h3 class="product-title">${data.result[0].title}</h3>
-						<h4>Category: ${data.result[0].category}</h4>
-						<p class="product-description">Description: ${data.result[0].description}</p>
-						<p>Posted by: ${data.result[0].username}</p>
-						<h4 class="price">Price: <span>${data.result[0].price}</span></h4>
+						<h3 class="product-title">${data.result.result[0].title}</h3>
+						<h4>Category: ${data.result.result[0].category}</h4>
+						<p class="product-description">Description: ${data.result.result[0].description}</p>
+						<p>Posted by: ${data.result.result[0].username}</p>
+						<h4 class="price">Price: <span>${data.result.result[0].price}</span></h4>
 						<div class="action">
 							<form class="form-inline my-2 my-lg-0">
 								<div class="input-group input-group-sm" id="searchbar">

@@ -1,7 +1,7 @@
 var db = require('./databaseConfig.js');
 var config = require('../config.js');
 var jwt = require('jsonwebtoken');
-
+const bcrypt = require('bcrypt');
 var userDB = {
 
 	loginUser: function (email, password, callback) {
@@ -47,23 +47,64 @@ var userDB = {
 		});
 	},
 
+
+	//----------------------------------------------------------
+	// Fixed codes for login
+	//----------------------------------------------------------
+	// loginUser: function (email, password, callback) {
+	// 	const conn = db.getConnection();
+
+	// 	conn.connect(function (err) {
+	// 		if (err) {
+	// 			console.log(err);
+	// 			return callback(err, null, null);
+	// 		}
+
+	// 		console.log("Connected!");
+
+	// 		// Get the user by email
+	// 		const sql = 'SELECT * FROM users WHERE email = ?';
+	// 		conn.query(sql, [email], async function (err, result) {
+	// 			conn.end();
+
+	// 			if (err) {
+	// 				console.log("Err: " + err);
+	// 				return callback(err, null, null);
+	// 			}
+
+	// 			if (result.length === 1) {
+	// 				const user = result[0];
+
+	// 				try {
+	// 					// Compare hashed password with the input password
+	// 					const passwordMatch = await bcrypt.compare(password, user.password);
+
+	// 					if (passwordMatch) {
+	// 						// Generate JWT token
+	// 						const token = jwt.sign({ id: user.id }, config.key, { expiresIn: 86400 });
+	// 						console.log("@@token " + token);
+	// 						return callback(null, token, user);
+	// 					} else {
+	// 						console.log("Email/Password does not match");
+	// 						const err2 = new Error("Email/Password does not match.");
+	// 						err2.statusCode = 401;
+	// 						return callback(err2, null, null);
+	// 					}
+	// 				} catch (compareErr) {
+	// 					console.log("Error comparing password:", compareErr);
+	// 					return callback(compareErr, null, null);
+	// 				}
+	// 			} else {
+	// 				console.log("User not found");
+	// 				const err2 = new Error("Email/Password does not match.");
+	// 				err2.statusCode = 401;
+	// 				return callback(err2, null, null);
+	// 			}
+	// 		});
+	// 	});
+	// },
+
 	updateUser: function (username, firstname, lastname, id, callback) {
-		// Define validation regex patterns
-		const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/; // Alphanumeric + underscore, 3-30 characters
-		const nameRegex = /^[a-zA-Z\s]{2,30}$/;       // Alphabetic + spaces, 2-30 characters
-
-		// Validate inputs
-		if (!usernameRegex.test(username)) {
-			return callback(new Error("Invalid username: Only alphanumeric characters and underscores are allowed (3-30 characters)."), null);
-		}
-
-		if (!nameRegex.test(firstname)) {
-			return callback(new Error("Invalid first name: Only alphabetic characters and spaces are allowed (2-30 characters)."), null);
-		}
-
-		if (!nameRegex.test(lastname)) {
-			return callback(new Error("Invalid last name: Only alphabetic characters and spaces are allowed (2-30 characters)."), null);
-		}
 
 		var conn = db.getConnection();
 		conn.connect(function (err) {
@@ -90,33 +131,41 @@ var userDB = {
 		})
 	},
 
-	addUser: function (username, email, password, profile_pic_url, role, callback) {
+	 addUser: function (username, email, password, profile_pic_url, role, callback) {
+		const conn = db.getConnection();
 
-		var conn = db.getConnection();
-
-		conn.connect(function (err) {
+		conn.connect(async function (err) {
 			if (err) {
 				console.log(err);
 				return callback(err, null);
 			} else {
-
-
 				console.log("Connected!");
-				var sql = "Insert into users(username,email,password,profile_pic_url,role) values(?,?,?,?,?)";
-				conn.query(sql, [username, email, password, profile_pic_url, role], function (err, result) {
-					conn.end();
 
-					if (err) {
-						console.log(err);
-						return callback(err, null);
-					} else {
-						return callback(null, result);
-					}
-				});
+				// Hash the password before inserting
+				try {
+					const saltRounds = 10; // Adjust as needed
+					const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+					const sql = "INSERT INTO users(username, email, password, profile_pic_url, role) VALUES (?, ?, ?, ?, ?)";
+					conn.query(sql, [username, email, hashedPassword, profile_pic_url, role], function (err, result) {
+						conn.end();
+
+						if (err) {
+							console.log(err);
+							return callback(err, null);
+						} else {
+							return callback(null, result);
+						}
+					});
+
+				} catch (hashErr) {
+					console.log("Error hashing password:", hashErr);
+					return callback(hashErr, null);
+				}
 			}
 		});
-	},
+	}
+
 };
 
 

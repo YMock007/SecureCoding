@@ -72,7 +72,7 @@
                 contentType: "application/json",//standard
                 dataType: "json",
                 success: function (data, textStatus, xhr) {//retrieve some data back from server
-                    console.log(data)
+                    
                     window.localStorage.clear()
                     window.location.assign("http://localhost:3001/loginPage.html")
                 }, error(xhr, textStatus, err) {

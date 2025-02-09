@@ -5,23 +5,21 @@ var config = require('../config');
 
 function verifyToken(req, res, next){
 
-    var token = req.headers['authorization']; //retrieve authorization header's content
+    var token = req.headers['authorization'];
 
     if(!token || !token.includes('Bearer')){ 
     
        res.status(403);
        return res.send({auth:'false', message:'Not authorized!'});
     }else{
-       token=token.split('Bearer ')[1]; //obtain the token's value
-       jwt.verify(token, config.key, function(err, decoded){ //verify token
-        if(err){
-            res.status(403);
-            return res.end({auth:false, message:'Not authorized!'});
-        }else{
-            req.id = decoded.id
-            next();
+       token=token.split('Bearer ')[1]; 
+       jwt.verify(token, config.key, function (err, decoded) {
+        if (err || decoded.exp < Date.now() / 1000) {
+            return res.status(403).json({ auth: false, message: 'Token expired or invalid!' });
         }
-       });
+        req.id = decoded.id;
+        next();
+    });
     }
 }
 
