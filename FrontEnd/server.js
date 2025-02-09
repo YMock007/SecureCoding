@@ -1,31 +1,41 @@
-const express=require('express');
-const serveStatic=require('serve-static');
+const express = require('express');
+const serveStatic = require('serve-static');
+const morgan = require('morgan'); // Import Morgan for logging
+const fs = require('fs');
+const path = require('path');
 
-var hostname="localhost";
-var port=3001;
+var hostname = "localhost";
+var port = 3001;
 
-var app=express();
+var app = express();
 
-app.use(function(req,res,next){
-    console.log(req.url);
-    console.log(req.method);
-    console.log(req.path);
-    console.log(req.query.id);
+// Create a write stream (in append mode) for logging to a file
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'frontend-access.log'), { flags: 'a' });
 
-    if(req.method!="GET"){
+// Use Morgan to log requests to both the console and file
+app.use(morgan('combined', { stream: accessLogStream })); // Logs requests to file
+app.use(morgan('dev')); // Logs requests to the console
+
+// Middleware to log request details manually
+app.use((req, res, next) => {
+    console.log(`Request URL: ${req.url}`);
+    console.log(`Method: ${req.method}`);
+    console.log(`Path: ${req.path}`);
+    console.log(`Query ID: ${req.query.id || "N/A"}`);
+
+    if (req.method !== "GET") {
         res.type('.html');
-        var msg="<html><body>This server only serves web pages with GET!</body></html>";
+        var msg = "<html><body>This server only serves web pages with GET!</body></html>";
         res.end(msg);
-    }else{
+    } else {
         next();
     }
 });
 
+// Serve static files from the "public" directory
+app.use(serveStatic(__dirname + "/public"));
 
-app.use(serveStatic(__dirname+"/public"));
-
-
-app.listen(port,hostname,function(){
-
+// Start the server
+app.listen(port, hostname, function () {
     console.log(`Server hosted at http://${hostname}:${port}`);
 });

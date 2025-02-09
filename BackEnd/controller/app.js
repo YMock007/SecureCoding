@@ -3,6 +3,10 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
+const serveStatic = require('serve-static');
+const morgan = require('morgan');
+const fs = require('fs');
+const path = require('path');
 var user = require('../model/user.js');
 var listing = require('../model/listing');
 var offers = require('../model/offer');
@@ -10,10 +14,16 @@ var likes = require('../model/likes');
 var images = require('../model/images')
 var verifyToken = require('../auth/verifyToken.js');
 
-var path = require("path");
 var multer = require('multer')
 
 var cors = require('cors');//Just use(security feature)
+
+// Create a write stream (in append mode) for logging to a file
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'backend-access.log'), { flags: 'a' });
+
+// Use Morgan to log requests before any middleware or routes
+app.use(morgan('combined', { stream: accessLogStream })); // Logs to file
+app.use(morgan('dev')); // Logs to console
 
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 

@@ -1,5 +1,7 @@
 
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf/notyf.min.css">
+<script src="https://cdn.jsdelivr.net/npm/notyf/notyf.min.js"></script>
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"
     integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -24,17 +26,41 @@
         $('#firstname').val(firstname);
         $('#lastname').val(lastname);
 
-
+        // Initialize Notyf
+        const notyf = new Notyf();
         $('#sumbit').click(function () {
-            var username = $('#username').val();
-            var firstname = $('#firstname').val();
-            var lastname = $('#lastname').val();
+            // Define a whitelist function for sanitization
+            // Whitelist regex for validation
+            const usernameWhitelist = /^[a-zA-Z0-9_]{3,30}$/; // Alphanumeric + underscore, 3-30 characters
+            const nameWhitelist = /^[a-zA-Z\s]{2,30}$/;        // Alphabetic + spaces, 2-30 characters
+
+            // Get user input
+            var username = $('#username').val().trim();
+            var firstname = $('#firstname').val().trim();
+            var lastname = $('#lastname').val().trim();
+
+            // Validate inputs
+            if (!usernameWhitelist.test(username)) {
+                notyf.error('Invalid Username: Only alphanumeric characters and underscores are allowed (3-30 characters).');
+                return false;
+            }
+
+            if (!nameWhitelist.test(firstname)) {
+                notyf.error('Invalid First Name: Only alphabetic characters and spaces are allowed (2-30 characters).');
+                return false;
+            }
+
+            if (!nameWhitelist.test(lastname)) {
+                notyf.error('Invalid Last Name: Only alphabetic characters and spaces are allowed (2-30 characters).');
+                return false;
+            }
+
             var data = `{"username":"${username}","firstname":"${firstname}","lastname":"${lastname}"}`
             $.ajax({
                 headers: { "authorization": "Bearer " + token },
                 url: "http://localhost:8081/user/update/",//supply the api url
                 type: "PUT",///supply the method
-                data: data,//supply the data to the back-end(like PostMAN body but sending it in raw json format)
+                data: data,//supply the data to the back-end(like PostMan body but sending it in raw json format)
                 contentType: "application/json",//standard
                 dataType: "json",
                 success: function (data, textStatus, xhr) {//retrieve some data back from server

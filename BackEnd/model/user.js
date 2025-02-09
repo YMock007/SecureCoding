@@ -48,6 +48,22 @@ var userDB = {
 	},
 
 	updateUser: function (username, firstname, lastname, id, callback) {
+		// Define validation regex patterns
+		const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/; // Alphanumeric + underscore, 3-30 characters
+		const nameRegex = /^[a-zA-Z\s]{2,30}$/;       // Alphabetic + spaces, 2-30 characters
+
+		// Validate inputs
+		if (!usernameRegex.test(username)) {
+			return callback(new Error("Invalid username: Only alphanumeric characters and underscores are allowed (3-30 characters)."), null);
+		}
+
+		if (!nameRegex.test(firstname)) {
+			return callback(new Error("Invalid first name: Only alphabetic characters and spaces are allowed (2-30 characters)."), null);
+		}
+
+		if (!nameRegex.test(lastname)) {
+			return callback(new Error("Invalid last name: Only alphabetic characters and spaces are allowed (2-30 characters)."), null);
+		}
 
 		var conn = db.getConnection();
 		conn.connect(function (err) {

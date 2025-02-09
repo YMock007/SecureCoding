@@ -17,7 +17,7 @@
         var urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has("search")) {
             var search = urlParams.get("search");
-        }
+            var sanitizedSearch = search.replace(/[^a-zA-Z0-9\s]/g, ''); // Removes special characters        }
 
         if (urlParams.has("page")) {
             var pagenumber = parseInt(urlParams.get("page"));
@@ -26,11 +26,11 @@
         }
 
         $('#profile').html(username);
-        $('#searchheader').html("Listings which contains:" + search);
+        $('#searchheader').html("Listings which contains:" + sanitizedSearch);
 
         $.ajax({
             headers: { "authorization": "Bearer " + token },
-            url: "http://localhost:8081/search/" + `${search}`,//supply the api url
+            url: "http://localhost:8081/search/" + `${sanitizedSearch}`,//supply the api url
             type: "GET",///supply the method
             contentType: "application/json",//contentType: "application/json",//standard
             dataType: "json",
