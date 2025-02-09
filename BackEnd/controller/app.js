@@ -1,54 +1,107 @@
-
-
-var express = require('express');
-var bodyParser = require('body-parser');
-var app = express();
+const express = require('express');
+const bodyParser = require('body-parser');
 const serveStatic = require('serve-static');
-const morgan = require('morgan');
+const morgan = require('morgan'); // Request logging
+const winston = require('winston'); // Security logging
+const rateLimit = require('express-rate-limit'); // Prevent brute force attacks
+const TelegramBot = require('node-telegram-bot-api'); // Telegram bot for alerts
 const fs = require('fs');
 const path = require('path');
 var user = require('../model/user.js');
 var listing = require('../model/listing');
 var offers = require('../model/offer');
 var likes = require('../model/likes');
-var images = require('../model/images')
+var images = require('../model/images');
 var verifyToken = require('../auth/verifyToken.js');
 
-var multer = require('multer')
+var multer = require('multer');
+var cors = require('cors');
 
-var cors = require('cors');//Just use(security feature)
+var app = express();
 
-// Create a write stream (in append mode) for logging to a file
+// Set up Telegram bot for real-time alerts
+const TELEGRAM_BOT_TOKEN = "7445394857:AAHEkGObb72SWXvOnztEOfaNKewBlriVgyY"; // Replace with your bot token
+const TELEGRAM_CHAT_ID = "1156183055"; // Replace with your chat ID
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false });
+
+function sendTelegramAlert(message) {
+    bot.sendMessage(TELEGRAM_CHAT_ID, `🚨 Security Alert:\n${message}`)
+        .catch(err => console.error("Telegram Bot Error:", err));
+}
+
+// Create a Winston logger to store security-related events
+const securityLogger = winston.createLogger({
+    level: 'warn',
+    format: winston.format.json(),
+    transports: [
+        new winston.transports.File({ filename: 'security-monitor.log' }), // Logs security issues
+        new winston.transports.Console({ format: winston.format.simple() }) // Console logs
+    ]
+});
+
+// Create a write stream for HTTP request logging (Morgan)
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'backend-access.log'), { flags: 'a' });
 
-// Use Morgan to log requests before any middleware or routes
+// Use Morgan to log all HTTP requests to file and console
 app.use(morgan('combined', { stream: accessLogStream })); // Logs to file
 app.use(morgan('dev')); // Logs to console
 
-var urlencodedParser = bodyParser.urlencoded({ extended: false });
-
-app.options('*', cors());//Just use
-app.use(cors());//Just use
-app.use(bodyParser.json());
-app.use(urlencodedParser);
-
-//User APIs
-app.post('/user/login', function (req, res) {//Login
-	var email = req.body.email;
-	var password = req.body.password;
-
-	user.loginUser(email, password, function (err, token, result) {
-		if (err) {
-			res.status(500);
-			res.send(err.statusCode);
-		} else {
-			res.statusCode = 201;
-			res.setHeader('Content-Type', 'application/json');
-			delete result[0]['password'];//clear the password in json data, do not send back to client
-			res.json({ success: true, UserData: JSON.stringify(result), token: token, status: 'You are successfully logged in!' });
-		}
-	});
+// Rate-Limiting to Prevent Brute Force Attacks
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit to 5 failed login attempts per IP
+    handler: (req, res) => {
+        const alertMessage = `🚨 Possible Brute Force Attack from IP: ${req.ip}`;
+        securityLogger.warn(alertMessage);
+        sendTelegramAlert(alertMessage);
+        res.status(429).json({ error: "Too many login attempts. Try again later." });
+    }
 });
+
+// Apply Rate Limiter to Login Route
+app.use('/user/login', apiLimiter);
+
+// Middleware to Log Suspicious Activity
+app.use((req, res, next) => {
+    if (req.url.includes('/admin') || req.url.includes('/config')) {
+        const alertMessage = `🚨 Suspicious Access Attempt: ${req.url} from IP: ${req.ip}`;
+        securityLogger.warn(alertMessage);
+        sendTelegramAlert(alertMessage);
+    }
+    next();
+});
+
+// Middleware for Parsing JSON Requests
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// Serve Static Files
+app.use(serveStatic(__dirname + "/../public"));
+
+// User Login API with Telegram Bot Alert
+app.post('/user/login', function (req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
+
+    user.loginUser(email, password, function (err, token, result) {
+        if (err) {
+            const alertMessage = `❌ Failed login attempt for ${email} from IP: ${req.ip}`;
+            securityLogger.warn(alertMessage);
+            sendTelegramAlert(alertMessage);
+            res.status(500).send(err.statusCode);
+        } else {
+            res.status(201);
+            res.setHeader('Content-Type', 'application/json');
+            delete result[0]['password']; // Remove password before sending response
+            const alertMessage = ` Successful login: ${email} from IP: ${req.ip}`;
+            securityLogger.info(alertMessage);
+            sendTelegramAlert(alertMessage);
+            res.json({ success: true, UserData: JSON.stringify(result), token: token });
+        }
+    });
+});
+
 
 app.post('/user', function (req, res) {//Create User
 	var username = req.body.username;

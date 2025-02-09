@@ -1,2 +1,5 @@
 ::1 - - [09/Feb/2025:12:02:00 +0000] "GET /listings.html HTTP/1.1" 304 - "http://localhost:3001/loginPage.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"
 ::1 - - [09/Feb/2025:12:02:03 +0000] "GET /css/listings.css HTTP/1.1" 304 - "http://localhost:3001/listings.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"
+::1 - - [09/Feb/2025:13:38:47 +0000] "GET / HTTP/1.1" 404 139 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"
+::1 - - [09/Feb/2025:13:38:53 +0000] "GET /loginPage.html HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"
+::1 - - [09/Feb/2025:13:38:53 +0000] "GET /css/login.css HTTP/1.1" 304 - "http://localhost:3001/loginPage.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"
